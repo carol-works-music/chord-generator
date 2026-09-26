@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コード進行ジェネレーター｜雰囲気で選んで、その場で鳴らせる（無料）</title>
+<meta name="description" content="雰囲気（明るい・切ない・おしゃれ・ローファイ・ロック・壮大・ゲームBGM）を選ぶだけで、コード進行を表示してその場で再生。全12キーに移調、テンポ変更もできる、DTM・作曲初心者向けの無料ツールです。">
+<meta property="og:title" content="コード進行ジェネレーター（無料）">
+<meta property="og:description" content="雰囲気を選ぶだけで、コード進行を表示してその場で再生。全12キー対応。">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{
+  --bg:#171329; --panel:#221c3a; --panel-2:#2c2549; --line:#3a3160;
+  --ink:#f4f1ea; --ink-2:#c9c2e0; --ink-3:#8f87ad;
+  --accent:#f2a541; --accent-2:#ffd08a; --on-accent:#1b1533;
+  --key-w:#f4f1ea; --key-b:#231d3d;
+  --sans:"Noto Sans JP","Hiragino Sans","Yu Gothic UI","Meiryo",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.7}
+a{color:var(--accent-2)}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.wrap{max-width:980px;margin:0 auto;padding-inline:16px}
+
+header{border-top:6px solid var(--accent)}
+.top{display:flex;align-items:center;gap:12px;padding-block:18px 6px;flex-wrap:wrap}
+.brand{font-weight:900;letter-spacing:.06em;font-size:14px;color:var(--ink-2)}
+.lang{margin-left:auto;display:flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.lang button{background:transparent;border:0;padding:4px 12px;cursor:pointer;color:var(--ink-3);font-size:13px}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:700}
+h1{font-size:clamp(26px,5vw,40px);font-weight:900;margin:6px 0 4px;line-height:1.25;text-wrap:balance}
+h1 span{color:var(--accent)}
+.lead{color:var(--ink-2);margin:0 0 18px;max-width:40em}
+
+.moods{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.mood{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:6px 14px;cursor:pointer;color:var(--ink-2);font-size:14px}
+.mood[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:700}
+
+.stage{background:var(--panel);border-radius:16px;padding:20px;display:grid;gap:18px}
+.stage-head{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.pname{font-size:22px;font-weight:900}
+.roman{font-family:var(--mono);color:var(--ink-3);font-size:13px}
+.pdesc{color:var(--ink-2);font-size:14px;width:100%;margin:0}
+.chords{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.chord{background:var(--panel-2);border:2px solid transparent;border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:border-color .12s,transform .12s}
+.chord .nm{font-family:var(--mono);font-weight:700;font-size:clamp(20px,4vw,30px);line-height:1.2}
+.chord .bar{font-size:11px;color:var(--ink-3)}
+.chord.on{border-color:var(--accent);transform:translateY(-2px)}
+.chord:hover{border-color:var(--line)}
+
+.piano{position:relative;height:96px;background:var(--panel-2);border-radius:10px;overflow:hidden}
+.piano svg{display:block;width:100%;height:100%}
+
+.controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.play{background:var(--accent);color:var(--on-accent);border:0;border-radius:999px;padding:10px 24px;font-weight:900;cursor:pointer;font-size:16px;min-width:120px}
+.btn{background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 16px;cursor:pointer;color:var(--ink)}
+.btn:hover{border-color:var(--ink-3)}
+.field{display:flex;align-items:center;gap:8px;color:var(--ink-2);font-size:13px}
+select{background:var(--panel-2);border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+input[type=range]{accent-color:var(--accent);width:120px}
+.bpm{font-family:var(--mono);min-width:3ch;text-align:right;color:var(--ink)}
+.check{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-2)}
+.check input{accent-color:var(--accent)}
+
+.list{margin-top:26px}
+.list h2{font-size:18px;margin:0 0 10px}
+.plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:8px}
+.pitem{background:transparent;border:1px solid var(--line);border-radius:10px;padding:10px 12px;text-align:left;cursor:pointer;display:grid;gap:2px}
+.pitem[aria-current="true"]{border-color:var(--accent);background:rgba(242,165,65,.08)}
+.pitem .a{font-weight:700;font-size:14px}
+.pitem .b{font-family:var(--mono);font-size:12px;color:var(--ink-3)}
+
+.cta{margin-top:30px;background:linear-gradient(0deg,var(--panel),var(--panel));border:1px solid var(--accent);border-radius:16px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
+.cta h3{margin:0 0 4px;font-size:18px}
+.cta p{margin:0;color:var(--ink-2);font-size:14px}
+.cta a{background:var(--accent);color:var(--on-accent);text-decoration:none;font-weight:900;border-radius:999px;padding:10px 20px;white-space:nowrap}
+
+.faq{margin-top:30px;display:grid;gap:10px}
+.faq details{background:var(--panel);border-radius:10px;padding:10px 14px}
+.faq summary{cursor:pointer;font-weight:700}
+.faq p{margin:8px 0 0;color:var(--ink-2);font-size:14px}
+footer{color:var(--ink-3);font-size:12px;padding-block:30px 40px}
+
+@media (max-width:640px){
+  .chords{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .cta{grid-template-columns:1fr}
+  .cta a{justify-self:start}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <span class="brand">CAROL WORKS</span>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="ja" aria-pressed="true">日本語</button>
+        <button type="button" data-lang="en" aria-pressed="false">English</button>
+      </div>
+    </div>
+    <h1 id="h1"></h1>
+    <p class="lead" id="lead"></p>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="moods" id="moods" role="group"></div>
+
+  <section class="stage" aria-live="polite">
+    <div class="stage-head">
+      <span class="pname" id="pname"></span>
+      <span class="roman" id="roman"></span>
+      <p class="pdesc" id="pdesc"></p>
+    </div>
+    <div class="chords" id="chords"></div>
+    <div class="piano" id="piano" aria-hidden="true"></div>
+    <div class="controls">
+      <button type="button" class="play" id="play"></button>
+      <button type="button" class="btn" id="random"></button>
+      <label class="field"><span id="lblKey"></span>
+        <select id="key"></select>
+      </label>
+      <label class="field"><span id="lblTempo"></span>
+        <input type="range" id="tempo" min="60" max="160" step="1">
+        <span class="bpm" id="bpm"></span>
+      </label>
+      <label class="check"><input type="checkbox" id="bass" checked><span id="lblBass"></span></label>
+    </div>
+  </section>
+
+  <section class="list">
+    <h2 id="listTitle"></h2>
+    <div class="plist" id="plist"></div>
+  </section>
+
+  <section class="cta">
+    <div>
+      <h3 id="ctaTitle"></h3>
+      <p id="ctaText"></p>
+    </div>
+    <a id="ctaLink" href="#" target="_blank" rel="noopener"></a>
+  </section>
+
+  <section class="faq" id="faq"></section>
+</main>
+
+<footer class="wrap" id="foot"></footer>
+
+<script>
+(function(){
+"use strict";
+/* ---------- links (update when the English store goes live) ---------- */
+const LINKS = {
+  ja: "https://carol-works.booth.pm/items/8874527",
+  en: "https://carol-works.booth.pm/items/8874527"
+};
+
+/* ---------- theory (same definitions as the MIDI pack generator) ---------- */
+const Q = { maj:[0,4,7], min:[0,3,7], dom7:[0,4,7,10], maj7:[0,4,7,11], min7:[0,3,7,10], m7b5:[0,3,6,10] };
+const QN = { maj:"", min:"m", dom7:"7", maj7:"maj7", min7:"m7", m7b5:"m7b5" };
+const FLATS = ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"];
+const KEY_LABEL = ["C","D♭","D","E♭","E","F","F♯","G","A♭","A","B♭","B"];
+const LETTERS=["C","D","E","F","G","A","B"], NAT=[0,2,4,5,7,9,11];
+const MAJ_TONIC=["C","Db","D","Eb","E","F","F#","G","Ab","A","Bb","B"], MIN_TONIC=["C","C#","D","Eb","E","F","F#","G","G#","A","Bb","B"];
+const SHARPS=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"], DEG=[0,1,1,2,2,3,4,4,5,5,6,6];
+const tonicName=(k,m)=>(m==="min"?MIN_TONIC:MAJ_TONIC)[k];
+const keyText=(k,m)=>tonicName(k,m).replace("#","♯").replace("b","♭");
+function spell(k,m,off){
+  const t=tonicName(k,m), tl=LETTERS.indexOf(t[0]), li=(tl+DEG[off])%7, target=(k+off)%12;
+  const acc=((target-NAT[li]+18)%12)-6, name=LETTERS[li]+(acc>0?"#".repeat(acc):"b".repeat(-acc));
+  if(Math.abs(acc)>1||["Cb","Fb","E#","B#"].includes(name)) return (t.includes("#")?SHARPS:FLATS)[target];
+  return name;
+}
+
+
+const P = (id, mode, roman, ja, en, dja, den, chords, bpm, moods) => ({id, mode, roman, ja, en, dja, den, chords, bpm: bpm||100, moods});
+const PROGS = [
+  P(1,"maj","I–V–vi–IV","ポップス定番","Pop Classic","明るく前向き。ポップス・歌ものの定番","Bright and uplifting. The go-to pop progression",[[0,"maj"],[7,"maj"],[9,"min"],[5,"maj"]],100,["bright"]),
+  P(2,"maj","vi–IV–I–V","切なさから始まる","Bittersweet Start","切なく始まり、後半で開ける流れ","Starts wistful, opens up in the second half",[[9,"min"],[5,"maj"],[0,"maj"],[7,"maj"]],100,["emotional"]),
+  P(3,"maj","I–vi–IV–V","懐かしいポップス","Nostalgic Pop","オールディーズ風の、懐かしくやさしい響き","Warm, gentle, oldies feel",[[0,"maj"],[9,"min"],[5,"maj"],[7,"maj"]],90,["bright"]),
+  P(4,"maj","IVmaj7–V7–iii7–vi","王道進行","\"Royal Road\" (J-Pop)","日本のポップスで多い、切なさのある王道系","The emotional J-pop / anime staple",[[5,"maj7"],[7,"dom7"],[4,"min7"],[9,"min"]],100,["emotional"]),
+  P(5,"maj","I–V–vi–iii–IV–I–IV–V","カノン進行（8小節）","Canon (8 bars)","穏やかで壮大。1コード1小節の8小節","Calm and grand. One chord per bar, 8 bars",[[0,"maj"],[7,"maj"],[9,"min"],[4,"min"],[5,"maj"],[0,"maj"],[5,"maj"],[7,"maj"]],80,["epic","emotional"]),
+  P(6,"maj","vi–IV–V–I","疾走感のある進行","Driving","勢いがあり、サビに向く","Energetic — great for choruses",[[9,"min"],[5,"maj"],[7,"maj"],[0,"maj"]],120,["bright","rock"]),
+  P(7,"maj","I–IV–V–IV","シンプルな3コード","Simple Three-Chord","ロックンロール・カントリー風の素直な響き","Straightforward rock'n'roll / country",[[0,"maj"],[5,"maj"],[7,"maj"],[5,"maj"]],110,["bright","rock"]),
+  P(8,"maj","ii7–V7–Imaj7–vi7","ジャズ寄り","Jazzy","おしゃれで落ち着いた、ジャズ寄りの流れ","Smooth and relaxed, leaning jazz",[[2,"min7"],[7,"dom7"],[0,"maj7"],[9,"min7"]],100,["jazzy"]),
+  P(9,"maj","Imaj7–vi7–ii7–V7","循環コード","Turnaround","ラウンジ・ボサノバ風。ぐるぐる回り続ける","Lounge / bossa feel that keeps circling",[[0,"maj7"],[9,"min7"],[2,"min7"],[7,"dom7"]],95,["jazzy"]),
+  P(10,"maj","iii7–vi7–ii7–V7","循環コード（変形）","Turnaround (variation)","ジャズ・シティポップ風の、深みのある循環","Deeper jazz / city-pop circle",[[4,"min7"],[9,"min7"],[2,"min7"],[7,"dom7"]],100,["jazzy"]),
+  P(11,"maj","IVmaj7–III7–vi7–V7","シティポップ風","City Pop","都会的でどこか切ない響き","Urban and a little melancholic",[[5,"maj7"],[4,"dom7"],[9,"min7"],[7,"dom7"]],105,["jazzy","emotional"]),
+  P(12,"maj","Imaj7–IVmaj7–iii7–vi7","ローファイ","Lo-Fi","チル・作業用BGM向きの、やわらかい響き","Soft, chill, study-beat vibe",[[0,"maj7"],[5,"maj7"],[4,"min7"],[9,"min7"]],80,["chill"]),
+  P(13,"maj","ii7–iii7–IVmaj7–iii7","ローファイ（浮遊感）","Lo-Fi (floating)","浮かぶような、ぼんやりした心地よさ","Dreamy and weightless",[[2,"min7"],[4,"min7"],[5,"maj7"],[4,"min7"]],80,["chill"]),
+  P(14,"maj","I–bVII–IV–I","ロック定番","Rock Staple","ロックの定番。力強く開放的","Powerful, open rock sound",[[0,"maj"],[10,"maj"],[5,"maj"],[0,"maj"]],120,["rock"]),
+  P(15,"maj","I–IV–bVII–IV","明るいロック","Bright Rock","明るく突き抜ける、ロックの定番のひとつ","Bright, punchy rock classic",[[0,"maj"],[5,"maj"],[10,"maj"],[5,"maj"]],120,["rock","bright"]),
+  P(16,"maj","bVI–bVII–I–I","勇ましい進行","Heroic","アニメやゲームの盛り上がりに合う、勇ましい響き","Triumphant — perfect for anime and game climaxes",[[8,"maj"],[10,"maj"],[0,"maj"],[0,"maj"]],130,["epic","game"]),
+  P(17,"maj","I–IV–iv–I","映画的な切なさ","Cinematic","4度がマイナーに変わる、切ない借用和音","The bittersweet borrowed minor iv",[[0,"maj"],[5,"maj"],[5,"min"],[0,"maj"]],85,["emotional"]),
+  P(18,"maj","I–I7–IV–iv","ゴスペル・ソウル風","Gospel / Soul","ゴスペル・ソウル風の、温かく深い響き","Warm, deep gospel-soul color",[[0,"maj"],[0,"dom7"],[5,"maj"],[5,"min"]],75,["jazzy","emotional"]),
+  P(19,"min","i–bVI–bIII–bVII","マイナーの王道","Minor Epic","壮大でドラマチック。マイナーの定番","Grand and dramatic minor staple",[[0,"min"],[8,"maj"],[3,"maj"],[10,"maj"]],100,["epic"]),
+  P(20,"min","i–bVII–bVI–bVII","ダークな反復","Dark Loop","ダークで反復向き。ゲームの戦闘曲などに","Dark and repetitive — battle themes",[[0,"min"],[10,"maj"],[8,"maj"],[10,"maj"]],120,["dark","game"]),
+  P(21,"min","i–bVII–bVI–V","アンダルシア風","Andalusian","スペイン風の、情熱的で下降する響き","Passionate, Spanish-flavored descent",[[0,"min"],[10,"maj"],[8,"maj"],[7,"maj"]],110,["dark","epic"]),
+  P(22,"min","i–bVI–iv–V7","ドラマチックな解決","Dramatic Resolve","V7で次へ進みたくなる、ドラマチックな流れ","The V7 pulls you forward",[[0,"min"],[8,"maj"],[5,"min"],[7,"dom7"]],95,["dark","emotional"]),
+  P(23,"min","i–bIII–bVII–iv","ロック寄りのマイナー","Rock Minor","力強く、少し切ないロック寄りの進行","Strong with a touch of sadness",[[0,"min"],[3,"maj"],[10,"maj"],[5,"min"]],115,["rock","dark"]),
+  P(24,"min","i7–iv7–bVII7–bIIImaj7","ネオソウル風","Neo-Soul","R&B・ネオソウル風の、洗練された響き","Polished R&B / neo-soul",[[0,"min7"],[5,"min7"],[10,"dom7"],[3,"maj7"]],85,["jazzy","chill"]),
+  P(25,"min","i7–bVImaj7–bIIImaj7–bVII7","夜の雰囲気","Late Night","洗練された、夜の街のような雰囲気","Sophisticated, city-at-night mood",[[0,"min7"],[8,"maj7"],[3,"maj7"],[10,"dom7"]],90,["jazzy","chill"]),
+  P(26,"min","iim7b5–V7–i7–i7","マイナーのii–V–i","Minor ii–V–i","ジャズ寄りの、マイナーの定番の解決","The classic jazz minor resolution",[[2,"m7b5"],[7,"dom7"],[0,"min7"],[0,"min7"]],90,["jazzy","dark"]),
+  P(27,"min","i–bVI–bVII–i","ゲームBGM向き","Game BGM","ループしても自然に戻る、ゲームBGM向き","Loops back naturally — made for game music",[[0,"min"],[8,"maj"],[10,"maj"],[0,"min"]],110,["game"]),
+  P(28,"min","i–bIII–bVI–bVII","エピック","Epic Rise","上昇していく、壮大で映画的な進行","Rising, cinematic and grand",[[0,"min"],[3,"maj"],[8,"maj"],[10,"maj"]],100,["epic","game"]),
+  P(29,"min","i–v–iv–i","ダークでシンプル","Dark & Simple","飾りの少ない、暗くシンプルな進行","Bare, dark and simple",[[0,"min"],[7,"min"],[5,"min"],[0,"min"]],90,["dark"])
+];
+const MOODS = [
+  ["all","すべて","All"],["bright","明るい","Bright"],["emotional","切ない","Emotional"],["jazzy","おしゃれ","Jazzy"],
+  ["chill","ローファイ・チル","Lo-fi / Chill"],["rock","ロック","Rock"],["epic","壮大","Epic"],["dark","ダーク","Dark"],["game","ゲームBGM","Game BGM"]
+];
+
+function voice(pcs, prevCentroid){
+  const n = pcs.length; let best = null;
+  for(let inv=0; inv<n; inv++){
+    const order = pcs.slice(inv).concat(pcs.slice(0,inv));
+    for(let low=54; low<=66; low++){
+      if(low%12 !== order[0]) continue;
+      const notes=[low];
+      for(let i=1;i<n;i++){ let p=notes[i-1]+1; while(p%12!==order[i]) p++; notes.push(p); }
+      const centroid = notes.reduce((a,b)=>a+b,0)/n;
+      const span = notes[n-1]-notes[0];
+      const score = Math.abs(centroid-prevCentroid)+(span>12?5:0);
+      if(!best||score<best.score) best={notes,centroid,score};
+    }
+  }
+  return best;
+}
+function render(prog, tonic){
+  let prev=64; const out=[];
+  for(const [off,q] of prog.chords){
+    const root=(tonic+off)%12;
+    const pcs=Q[q].map(i=>(root+i)%12);
+    const v=voice(pcs,prev); prev=v.centroid;
+    const bass=36+(((root-36)%12)+12)%12;
+    out.push({name:spell(tonic,prog.mode,off)+QN[q], bass, notes:v.notes});
+  }
+  return out;
+}
+
+/* ---------- text ---------- */
+const T = {
+  ja:{
+    h1:'コード進行<span>ジェネレーター</span>',
+    lead:'雰囲気を選ぶだけで、コード進行を表示して、その場で鳴らせます。キーとテンポも自由に変えられる、無料のツールです。',
+    play:'▶ 再生', stop:'■ 停止', random:'おまかせ', key:'キー', tempo:'テンポ', bass:'ベースも鳴らす',
+    bar:(i)=>`${i}小節目`, list:'収録している進行', minorKey:'マイナー', majorKey:'メジャー',
+    ctaTitle:'この進行を、DAW でそのまま使いたいときは',
+    ctaText:'29進行 × 全12キー（348ファイル）の MIDI パックを配布しています。ドラッグするだけでコードとベースが鳴ります。商用OK。',
+    ctaLink:'MIDI パックを見る',
+    faq:[
+      ['音が鳴りません','端末の消音（マナーモード）を解除して、音量を上げてから「再生」を押してください。iPhone は、横のスイッチが消音になっていると鳴りません。'],
+      ['このツールで作った曲は、公開・販売してもいいですか？','はい。コード進行そのものは、音楽の一般的な知識です。自由にお使いください。'],
+      ['度数（ローマ数字）の見方は？','キーの主音を「I」として、何番目の音から始まるコードかを表します。小文字（vi など）はマイナーコードです。キーを変えても度数は同じです。']
+    ],
+    foot:'© Carol Works｜音は、ブラウザの機能で合成した簡易的な音です。'
+  },
+  en:{
+    h1:'Chord Progression <span>Generator</span>',
+    lead:'Pick a mood to see a chord progression and hear it instantly. Change the key and tempo freely. Free, no sign-up.',
+    play:'▶ Play', stop:'■ Stop', random:'Surprise me', key:'Key', tempo:'Tempo', bass:'Play bass',
+    bar:(i)=>`Bar ${i}`, list:'All progressions', minorKey:'minor', majorKey:'major',
+    ctaTitle:'Want these in your DAW?',
+    ctaText:'Get the MIDI pack: 29 progressions × all 12 keys (348 files). Drag, drop, and the chords and bass play. Royalty-free.',
+    ctaLink:'See the MIDI pack',
+    faq:[
+      ['I can\'t hear anything','Turn off silent mode, raise the volume, then press Play. On iPhone, the side switch must not be set to silent.'],
+      ['Can I release songs I make with this?','Yes. Chord progressions are common musical knowledge — use them freely.'],
+      ['How do I read the Roman numerals?','"I" is the first note of the key; each numeral shows which scale degree the chord starts on. Lowercase (like vi) means a minor chord. The numerals stay the same in every key.']
+    ],
+    foot:'© Carol Works · Sounds are simple tones synthesized by your browser.'
+  }
+};
+
+/* ---------- state ---------- */
+let lang = "ja";
+try{ const s=localStorage.getItem("cpg-lang"); if(s==="en"||s==="ja") lang=s; else if(!/^ja/i.test(navigator.language||"")) lang="en"; }catch(e){ if(!/^ja/i.test(navigator.language||"")) lang="en"; }
+let mood = "all", current = PROGS[0], key = 0, bpm = current.bpm, withBass = true;
+const $ = (id)=>document.getElementById(id);
+
+/* ---------- UI ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function keyName(){ return keyText(key,current.mode)+" "+(current.mode==="min"?T[lang].minorKey:T[lang].majorKey); }
+function drawText(){
+  const t=T[lang];
+  document.documentElement.lang = lang;
+  document.querySelectorAll(".lang button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.lang===lang)));
+  $("h1").innerHTML=t.h1; $("lead").textContent=t.lead;
+  $("random").textContent=t.random; $("lblKey").textContent=t.key; $("lblTempo").textContent=t.tempo; $("lblBass").textContent=t.bass;
+  $("listTitle").textContent=t.list; $("ctaTitle").textContent=t.ctaTitle; $("ctaText").textContent=t.ctaText;
+  $("ctaLink").textContent=t.ctaLink; $("ctaLink").href=LINKS[lang];
+  $("faq").innerHTML=t.faq.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("");
+  $("foot").textContent=t.foot;
+  $("moods").innerHTML=MOODS.map(([id,ja,en])=>`<button type="button" class="mood" data-mood="${id}" aria-pressed="${mood===id}">${esc(lang==="ja"?ja:en)}</button>`).join("");
+  $("key").innerHTML=KEY_LABEL.map((k,i)=>`<option value="${i}" ${i===key?"selected":""}>${esc(k)}</option>`).join("");
+  $("play").textContent = playing ? t.stop : t.play;
+  drawProg(); drawList();
+}
+function drawProg(){
+  const chords = render(current, key);
+  $("pname").textContent = (lang==="ja"?current.ja:current.en)+" — "+keyName();
+  $("roman").textContent = current.roman;
+  $("pdesc").textContent = lang==="ja"?current.dja:current.den;
+  $("chords").innerHTML = chords.map((c,i)=>`<div class="chord${i===activeBar?" on":""}" data-bar="${i}"><div class="nm">${esc(c.name)}</div><div class="bar">${esc(T[lang].bar(i+1))}</div></div>`).join("");
+  $("tempo").value = bpm; $("bpm").textContent = bpm;
+  drawPiano(chords[activeBar>=0?activeBar:0]);
+}
+function drawList(){
+  const list = PROGS.filter(p=>mood==="all"||p.moods.includes(mood));
+  $("plist").innerHTML = list.map(p=>{
+    const names = render(p,key).map(c=>c.name).join(" → ");
+    return `<button type="button" class="pitem" data-id="${p.id}" aria-current="${p===current}"><span class="a">${esc(lang==="ja"?p.ja:p.en)}</span><span class="b">${esc(names)}</span></button>`;
+  }).join("");
+}
+function drawPiano(chord){
+  const lo=36, hi=84; const whites=[]; const blacks=[];
+  const isBlack=(n)=>[1,3,6,8,10].includes(n%12);
+  for(let n=lo;n<=hi;n++){ if(!isBlack(n)) whites.push(n); }
+  const W=whites.length, w=100/W;
+  const on=new Set(chord?[...chord.notes].concat(withBass?[chord.bass]:[]):[]);
+  let s=`<svg viewBox="0 0 100 30" preserveAspectRatio="none">`;
+  whites.forEach((n,i)=>{ s+=`<rect x="${i*w}" y="0" width="${w-0.15}" height="30" fill="${on.has(n)?"#f2a541":"#f4f1ea"}"/>`; });
+  for(let n=lo;n<=hi;n++){
+    if(!isBlack(n)) continue;
+    const idx=whites.filter(x=>x<n).length;
+    s+=`<rect x="${idx*w-w*0.32}" y="0" width="${w*0.64}" height="18" fill="${on.has(n)?"#ffd08a":"#231d3d"}"/>`;
+  }
+  s+=`</svg>`; $("piano").innerHTML=s;
+}
+function select(p){ stop(); current=p; bpm=p.bpm; activeBar=-1; drawProg(); drawList(); }
+
+document.querySelector(".lang").addEventListener("click",e=>{ const b=e.target.closest("[data-lang]"); if(!b) return; lang=b.dataset.lang; try{localStorage.setItem("cpg-lang",lang);}catch(err){} drawText(); });
+$("moods").addEventListener("click",e=>{ const b=e.target.closest("[data-mood]"); if(!b) return; mood=b.dataset.mood;
+  const list=PROGS.filter(p=>mood==="all"||p.moods.includes(mood)); if(!list.includes(current)) select(list[0]);
+  drawText(); });
+$("plist").addEventListener("click",e=>{ const b=e.target.closest("[data-id]"); if(!b) return; select(PROGS.find(p=>p.id===+b.dataset.id)); });
+$("key").addEventListener("change",e=>{ key=+e.target.value; drawProg(); drawList(); });
+$("tempo").addEventListener("input",e=>{ bpm=+e.target.value; $("bpm").textContent=bpm; });
+$("bass").addEventListener("change",e=>{ withBass=e.target.checked; drawProg(); });
+$("random").addEventListener("click",()=>{
+  const list=PROGS.filter(p=>(mood==="all"||p.moods.includes(mood))&&p!==current);
+  const p=list[Math.floor(Math.random()*list.length)]||current; key=Math.floor(Math.random()*12); select(p); $("key").value=key; start();
+});
+$("chords").addEventListener("click",e=>{ const c=e.target.closest("[data-bar]"); if(!c) return; previewBar(+c.dataset.bar); });
+$("play").addEventListener("click",()=>{ playing?stop():start(); });
+
+/* ---------- audio ---------- */
+let ctx=null, master=null, playing=false, timer=null, nextTime=0, barIdx=0, activeBar=-1, uiTimers=[];
+function ensureCtx(){
+  if(!ctx){ const AC=window.AudioContext||window.webkitAudioContext; if(!AC) return null; ctx=new AC();
+    master=ctx.createGain(); master.gain.value=0.5;
+    const comp=ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination); }
+  if(ctx.state==="suspended") ctx.resume();
+  return ctx;
+}
+const hz=(m)=>440*Math.pow(2,(m-69)/12);
+function pad(m,t,dur){
+  const g=ctx.createGain(); const f=ctx.createBiquadFilter(); f.type="lowpass"; f.frequency.value=1800; f.Q.value=0.4;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.09,t+0.04); g.gain.setTargetAtTime(0.06,t+0.1,0.3); g.gain.setTargetAtTime(0,t+dur-0.08,0.05);
+  [-6,6].forEach(det=>{ const o=ctx.createOscillator(); o.type="triangle"; o.frequency.value=hz(m); o.detune.value=det; o.connect(f); o.start(t); o.stop(t+dur+0.3); });
+  f.connect(g); g.connect(master);
+}
+function bassNote(m,t,dur){
+  const g=ctx.createGain(); const o=ctx.createOscillator(); o.type="sine"; o.frequency.value=hz(m);
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(0.28,t+0.02); g.gain.setTargetAtTime(0.18,t+0.05,0.4); g.gain.setTargetAtTime(0,t+dur-0.08,0.05);
+  o.connect(g); g.connect(master); o.start(t); o.stop(t+dur+0.3);
+}
+function playBar(chord,t,dur){ chord.notes.forEach(n=>pad(n,t,dur)); if(withBass) bassNote(chord.bass,t,dur); }
+function setActive(i){ activeBar=i; document.querySelectorAll("#chords .chord").forEach((el,j)=>el.classList.toggle("on",j===i)); const ch=render(current,key); drawPiano(ch[i>=0?i:0]); }
+function schedule(){
+  const chords=render(current,key);
+  while(nextTime < ctx.currentTime+0.3){
+    const dur=60/bpm*4; const i=barIdx%chords.length; const t=nextTime;
+    playBar(chords[i],t,dur);
+    uiTimers.push(setTimeout(()=>{ if(playing) setActive(i); }, Math.max(0,(t-ctx.currentTime)*1000)));
+    nextTime+=dur; barIdx++;
+  }
+}
+function start(){
+  if(!ensureCtx()) return;
+  playing=true; $("play").textContent=T[lang].stop; barIdx=0; nextTime=ctx.currentTime+0.06;
+  schedule(); timer=setInterval(schedule,100);
+}
+function stop(){
+  playing=false; clearInterval(timer); timer=null; uiTimers.forEach(clearTimeout); uiTimers=[];
+  if(master&&ctx){ const old=master; old.gain.setTargetAtTime(0,ctx.currentTime,0.03); setTimeout(()=>{ try{old.disconnect();}catch(e){} },300);
+    master=ctx.createGain(); master.gain.value=0.5; const comp=ctx.createDynamicsCompressor(); master.connect(comp); comp.connect(ctx.destination); }
+  $("play").textContent=T[lang].play; setActive(-1);
+}
+function previewBar(i){ if(!ensureCtx()) return; const ch=render(current,key); if(!playing){ playBar(ch[i],ctx.currentTime+0.03,1.4); setActive(i); } }
+
+drawText();
+})();
+</script>
+</body>
+</html>
