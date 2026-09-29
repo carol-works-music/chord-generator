@@ -80,6 +80,8 @@ input[type=range]{accent-color:var(--accent);width:120px}
 .cta{margin-top:30px;background:linear-gradient(0deg,var(--panel),var(--panel));border:1px solid var(--accent);border-radius:16px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center}
 .cta h3{margin:0 0 4px;font-size:18px}
 .cta p{margin:0;color:var(--ink-2);font-size:14px}
+.cta .free{margin-top:8px;font-size:13px}
+.cta .free a{background:none;color:var(--accent);padding:0;font-weight:700;text-decoration:underline;border-radius:0}
 .cta a{background:var(--accent);color:var(--on-accent);text-decoration:none;font-weight:900;border-radius:999px;padding:10px 20px;white-space:nowrap}
 
 .faq{margin-top:30px;display:grid;gap:10px}
@@ -145,6 +147,7 @@ footer{color:var(--ink-3);font-size:12px;padding-block:30px 40px}
     <div>
       <h3 id="ctaTitle"></h3>
       <p id="ctaText"></p>
+      <p class="free" id="freeLine"></p>
     </div>
     <a id="ctaLink" href="#" target="_blank" rel="noopener"></a>
   </section>
@@ -162,6 +165,9 @@ const LINKS = {
   ja: "https://carol-works.booth.pm/items/8874527",
   en: "https://carolworks.itch.io/chord-progression-midi-pack"
 };
+
+/* free sample MIDI files (key of C), same as the BOOTH free trial */
+const FREE = ["01_maj_Pop_I-V-vi-IV.mid","12_maj_LoFi_I-IV-iii-vi.mid","27_min_Game_i-bVI-bVII-i.mid"];
 
 /* ---------- theory (same definitions as the MIDI pack generator) ---------- */
 const Q = { maj:[0,4,7], min:[0,3,7], dom7:[0,4,7,10], maj7:[0,4,7,11], min7:[0,3,7,10], m7b5:[0,3,6,10] };
@@ -256,6 +262,7 @@ const T = {
     ctaTitle:'この進行を、DAW でそのまま使いたいときは',
     ctaText:'29進行 × 全12キー（348ファイル）の MIDI パックを配布しています。ドラッグするだけでコードとベースが鳴ります。商用OK。',
     ctaLink:'MIDI パックを見る',
+    free:'まずは無料で（キーC）：', freeNames:['ポップス定番','ローファイ','ゲームBGM向き'],
     faq:[
       ['音が鳴りません','端末の消音（マナーモード）を解除して、音量を上げてから「再生」を押してください。iPhone は、横のスイッチが消音になっていると鳴りません。'],
       ['このツールで作った曲は、公開・販売してもいいですか？','はい。コード進行そのものは、音楽の一般的な知識です。自由にお使いください。'],
@@ -271,6 +278,7 @@ const T = {
     ctaTitle:'Want these in your DAW?',
     ctaText:'Get the MIDI pack: 29 progressions × all 12 keys (348 files). Drag, drop, and the chords and bass play. Royalty-free.',
     ctaLink:'See the MIDI pack',
+    free:'Free samples (key of C): ', freeNames:['Pop','Lo-fi','Game BGM'],
     faq:[
       ['I can\'t hear anything','Turn off silent mode, raise the volume, then press Play. On iPhone, the side switch must not be set to silent.'],
       ['Can I release songs I make with this?','Yes. Chord progressions are common musical knowledge — use them freely.'],
@@ -297,6 +305,7 @@ function drawText(){
   $("random").textContent=t.random; $("lblKey").textContent=t.key; $("lblTempo").textContent=t.tempo; $("lblBass").textContent=t.bass;
   $("listTitle").textContent=t.list; $("ctaTitle").textContent=t.ctaTitle; $("ctaText").textContent=t.ctaText;
   $("ctaLink").textContent=t.ctaLink; $("ctaLink").href=LINKS[lang];
+  $("freeLine").innerHTML=esc(t.free)+FREE.map((f,i)=>`<a href="free/${f}" download>${esc(t.freeNames[i])}</a>`).join(" / ");
   $("faq").innerHTML=t.faq.map(([q,a])=>`<details><summary>${esc(q)}</summary><p>${esc(a)}</p></details>`).join("");
   $("foot").textContent=t.foot;
   $("moods").innerHTML=MOODS.map(([id,ja,en])=>`<button type="button" class="mood" data-mood="${id}" aria-pressed="${mood===id}">${esc(lang==="ja"?ja:en)}</button>`).join("");
